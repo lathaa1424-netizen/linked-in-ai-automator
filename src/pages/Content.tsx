@@ -1,182 +1,400 @@
-import { AutomationPipeline } from "@/components/content/AutomationPipeline";
-import { ContentIdeaCard } from "@/components/content/ContentIdeaCard";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  FileText,
+  Sparkles,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  BarChart3,
+  TrendingUp,
+  Eye,
+  Heart,
+  MessageSquare,
+  Share2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Star,
+  Plus,
+  Send,
+  Edit3,
+  RefreshCw,
+  Trash2,
+  MoreHorizontal,
+  SendHorizontal,
+  Clock3,
+  Lightbulb,
+  AlertCircle,
+  CheckCheck,
+  FileWarning,
+  Loader2
+} from "lucide-react";
+import { posts, contentTypeData, engagementData } from "@/lib/data";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+
+type TabValue = "all" | "ideas" | "drafts" | "review" | "scheduled" | "published";
+
+const statusConfig: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  idea: { label: "Idea", icon: <Lightbulb className="w-3 h-3" />, color: "text-purple-400", bg: "bg-purple-400/10" },
+  drafting: { label: "Drafting", icon: <Edit3 className="w-3 h-3" />, color: "text-blue-400", bg: "bg-blue-400/10" },
+  review: { label: "In Review", icon: <AlertCircle className="w-3 h-3" />, color: "text-yellow-400", bg: "bg-yellow-400/10" },
+  scheduled: { label: "Scheduled", icon: <Calendar className="w-3 h-3" />, color: "text-cyan-400", bg: "bg-cyan-400/10" },
+  published: { label: "Published", icon: <CheckCircle2 className="w-3 h-3" />, color: "text-green-400", bg: "bg-green-400/10" },
+  rejected: { label: "Rejected", icon: <XCircle className="w-3 h-3" />, color: "text-red-400", bg: "bg-red-400/10" },
+};
 
 export default function Content() {
-  const [activeTab, setActiveTab] = useState<string>("pipeline");
+  const [activeTab, setActiveTab] = useState<TabValue>("all");
+  const [selectedPost, setSelectedPost] = useState(posts[0]);
+
+  const filteredPosts = activeTab === "all" 
+    ? posts 
+    : posts.filter(p => {
+        if (activeTab === "ideas") return p.status === "idea";
+        if (activeTab === "drafts") return p.status === "drafting";
+        if (activeTab === "review") return p.status === "review";
+        if (activeTab === "scheduled") return p.status === "scheduled";
+        if (activeTab === "published") return p.status === "published";
+        return true;
+      });
+
+  const counts = {
+    all: posts.length,
+    ideas: posts.filter(p => p.status === "idea").length,
+    drafts: posts.filter(p => p.status === "drafting").length,
+    review: posts.filter(p => p.status === "review").length,
+    scheduled: posts.filter(p => p.status === "scheduled").length,
+    published: posts.filter(p => p.status === "published").length,
+  };
+
+  const avgEngagement = posts.filter(p => p.engagement).reduce((acc, p) => ({
+    views: acc.views + (p.engagement?.views || 0),
+    likes: acc.likes + (p.engagement?.likes || 0),
+    comments: acc.comments + (p.engagement?.comments || 0),
+    shares: acc.shares + (p.engagement?.shares || 0),
+  }), { views: 0, likes: 0, comments: 0, shares: 0 });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Content Automation</h1>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" aria-label="Add new idea">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-xl ai-gradient flex items-center justify-center shadow-lg shadow-primary/30">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold gradient-text">Content Studio</h1>
+              <p className="text-sm text-muted-foreground">AI-powered content creation, scheduling, and analytics</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="border-border hover:bg-secondary/50" size="sm">
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            Refresh
           </Button>
-          <Button variant="outline" size="icon" aria-label="Refresh">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-14.736-2m0 0a8.003 8.003 0 0111.313-2m0 9a5.006 5.006 0 00-8.257 2m0 0a5.006 5.006 0 008.257-2M20 8v5" />
-            </svg>
+          <Button className="btn-gradient text-white shadow-lg shadow-primary/20" size="sm">
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            Generate Content
           </Button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <Tabs defaultValue="pivot" className="w-full">
-          <TabsList className="grid w-full grid-cols-[120px_1fr]">
-            <TabsTrigger value="pipeline" className="flex h-10 w-full items-center justify-center rounded-md border border-muted background-background hover:bg-muted/50">
-              Automation Pipeline
-            </TabsTrigger>
-            <TabsTrigger value="ideas" className="flex h-10 w-full items-center justify-center rounded-md border border-muted background-background hover:bg-muted/50">
-              Content Ideas
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex h-10 w-full items-center justify-center rounded-md border border-muted background-background hover:bg-muted/50">
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex h-10 w-full items-center justify-center rounded-md border border-muted background-background hover:bg-muted/50">
-              Analytics
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pipeline" className="pt-4">
-            <AutomationPipeline />
-          </TabsContent>
-
-          <TabsContent value="ideas" className="pt-4">
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <ContentIdeaCard
-                                  idea={{
-                                    id: "1",
-                                    topic: "AI in Marketing",
-                                    angle: "Practical tips for beginners",
-                                    hooks: ["Stop wasting time on manual tasks", "Here's what nobody tells you about AI", "The 5-minute AI workflow that changed everything"],
-                                    targetAudience: "Marketing professionals",
-                                    estimatedEngagement: "high",
-                                    status: "generated",
-                                  }}
-                                />
-                                <ContentIdeaCard
-                                  idea={{
-                                    id: "2",
-                                    topic: "Remote Work Productivity",
-                                    angle: "Data-driven insights",
-                                    hooks: ["The research behind async communication", "Why your meetings are killing productivity", "Numbers don't lie about remote work"],
-                                    targetAudience: "Remote team leaders",
-                                    estimatedEngagement: "medium",
-                                    status: "approved",
-                                  }}
-                                />
-                                <ContentIdeaCard
-                                  idea={{
-                                    id: "3",
-                                    topic: "Startup Growth",
-                                    angle: "Lessons from failures",
-                                    hooks: ["What I learned after 3 failed startups", "The metrics that actually matter", "Don't make this mistake I did"],
-                                    targetAudience: "Founders and early-stage entrepreneurs",
-                                    estimatedEngagement: "high",
-                                    status: "drafted",
-                                  }}
-                                />
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "Total Posts", value: "18", delta: 12.5, icon: FileText, color: "violet" },
+          { label: "Avg Engagement", value: `${Math.round((avgEngagement.likes / posts.filter(p => p.engagement).length) * 10) / 10}%`, delta: 8.3, icon: TrendingUp, color: "cyan" },
+          { label: "Pending Review", value: counts.review, delta: -2, icon: AlertCircle, color: "yellow" },
+          { label: "Scheduled", value: counts.scheduled, delta: 0, icon: Calendar, color: "green" },
+        ].map((stat) => (
+          <div key={stat.label} className={`glass-card p-4 border border-${stat.color}-500/20 card-hover`}>
+            <div className="flex items-start justify-between mb-2">
+              <div className={`w-8 h-8 rounded-lg bg-${stat.color}-500/10 flex items-center justify-center ${
+                stat.color === "violet" ? "text-violet-400" :
+                stat.color === "cyan" ? "text-cyan-400" :
+                stat.color === "yellow" ? "text-yellow-400" :
+                "text-green-400"
+              }`}>
+                <stat.icon className="w-4 h-4" />
               </div>
+              <span className={`text-xs font-medium ${stat.delta > 0 ? "text-green-400" : stat.delta < 0 ? "text-red-400" : "text-muted-foreground"}`}>
+                {stat.delta > 0 ? <ArrowUpRight className="w-3 h-3 inline" /> : stat.delta < 0 ? <ArrowDownRight className="w-3 h-3 inline" /> : null}
+                {stat.delta > 0 ? `+${stat.delta}%` : stat.delta < 0 ? `${stat.delta}%` : "—"}
+              </span>
             </div>
-          </TabsContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+          </div>
+        ))}
+      </div>
 
-          <TabsContent value="calendar" className="pt-4">
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Content Calendar</h3>
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Week of Jan 15-21</h4>
-                      <p className="text-sm text-muted-foreground">3 posts scheduled</p>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Posts List */}
+        <Card className="xl:col-span-2 glass-card border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Content Library</CardTitle>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
+                <TabsList className="h-8 bg-secondary/50">
+                  {(["all", "ideas", "drafts", "review", "scheduled", "published"] as TabValue[]).map((tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="h-7 px-2.5 text-[11px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {counts[tab] > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary text-[10px] font-bold">
+                          {counts[tab]}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {filteredPosts.map((post) => {
+              const sc = statusConfig[post.status];
+              const isSelected = selectedPost?.id === post.id;
+              return (
+                <div
+                  key={post.id}
+                  onClick={() => setSelectedPost(post)}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected 
+                      ? "border-primary/50 bg-primary/5" 
+                      : "border-border bg-secondary/20 hover:bg-secondary/40 hover:border-border"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-semibold truncate">{post.title}</h3>
+                        {post.score && (
+                          <span className="badge-glow">
+                            <Star className="w-2.5 h-2.5" />
+                            {post.score}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className={`flex items-center gap-1 ${sc.color}`}>
+                          {sc.icon}
+                          {sc.label}
+                        </span>
+                        <span>·</span>
+                        <span>{post.topic}</span>
+                        <span>·</span>
+                        <span>{post.createdAt.split("T")[0]}</span>
+                      </div>
+                      {post.engagement && (
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Eye className="w-3 h-3" />
+                            {(post.engagement.views / 1000).toFixed(1)}K
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Heart className="w-3 h-3" />
+                            {post.engagement.likes}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MessageSquare className="w-3 h-3" />
+                            {post.engagement.comments}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Share2 className="w-3 h-3" />
+                            {post.engagement.shares}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <Button variant="outline" size="sm">
-                      View Calendar
-                    </Button>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                      <div className="h-8 w-8 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-500">
-                        16
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">The 5-minute morning routine</p>
-                        <p className="text-xs text-muted-foreground">Tue, Jan 16 • 9:00 AM</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3" />
-                        </svg>
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                      <div className="h-8 w-8 bg-green-500/20 rounded-lg flex items-center justify-center text-green-500">
-                        18
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">Founder regrets study</p>
-                        <p className="text-xs text-muted-foreground">Thu, Jan 18 • 2:00 PM</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3" />
-                        </svg>
-                      </Button>
-                    </div>
+                    <button className="p-1 rounded hover:bg-secondary/50 transition-colors">
+                      <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                    </button>
                   </div>
                 </div>
+              );
+            })}
+            {filteredPosts.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No posts in this category</p>
               </div>
-            </Card>
-          </TabsContent>
+            )}
+          </CardContent>
+        </Card>
 
-          <TabsContent value="analytics" className="pt-4">
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Content Performance</h3>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <h4 className="font-medium mb-2">Top Performing Posts</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                        <div className="h-8 w-8 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-500">
-                          1
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">Founder regrets study</p>
-                          <p className="text-xs text-muted-foreground">18.2K impressions • 412 likes</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                        <div className="h-8 w-8 bg-green-500/20 rounded-lg flex items-center justify-center text-green-500">
-                          2
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">Morning routine post</p>
-                          <p className="text-xs text-muted-foreground">12.4K impressions • 234 likes</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        {/* Post Detail */}
+        <div className="space-y-4">
+          {selectedPost && (
+            <Card className="glass-card border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold">Post Preview</CardTitle>
+                  <Badge variant="outline" className={`${statusConfig[selectedPost.status].color} ${statusConfig[selectedPost.status].bg} border-0`}>
+                    {statusConfig[selectedPost.status].icon}
+                    <span className="ml-1">{statusConfig[selectedPost.status].label}</span>
+                  </Badge>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <div className="h-96 bg-muted rounded-lg">
-                    {/* Chart would go here */}
-                    <div className="flex h-full items-center justify-center text-muted-foreground">
-                      Performance Chart
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full ai-gradient flex items-center justify-center text-white text-xs font-bold">
+                      {selectedPost.author.avatar}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{selectedPost.author.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{selectedPost.publishedAt || selectedPost.scheduledFor || selectedPost.createdAt}</p>
                     </div>
                   </div>
+                  <h3 className="text-lg font-bold mb-2">{selectedPost.title}</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {selectedPost.content.length > 400 
+                      ? selectedPost.content.slice(0, 400) + "..."
+                      : selectedPost.content}
+                  </p>
+                </div>
+                
+                {selectedPost.score && (
+                  <div className="p-3 rounded-lg bg-secondary/30 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted-foreground">Quality Score</span>
+                      <span className="text-lg font-bold gradient-text">{selectedPost.score}/100</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${selectedPost.score}%` }} />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedPost.hashtags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-[10px] border-border bg-secondary/30 text-muted-foreground">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                {selectedPost.reviewNotes && (
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
+                      <span className="text-xs font-medium text-yellow-400">Review Note</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{selectedPost.reviewNotes}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  {selectedPost.status === "idea" && (
+                    <Button className="btn-gradient text-white flex-1" size="sm">
+                      <Sparkles className="w-3 h-3 mr-1.5" />
+                      Draft with AI
+                    </Button>
+                  )}
+                  {selectedPost.status === "drafting" && (
+                    <Button className="btn-gradient text-white flex-1" size="sm">
+                      <Send className="w-3 h-3 mr-1.5" />
+                      Submit for Review
+                    </Button>
+                  )}
+                  {selectedPost.status === "review" && (
+                    <>
+                      <Button variant="outline" size="sm" className="flex-1 border-green-500/30 text-green-400 hover:bg-green-500/10">
+                        <CheckCheck className="w-3 h-3 mr-1.5" />
+                        Approve
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10">
+                        <XCircle className="w-3 h-3 mr-1.5" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                  {selectedPost.status === "scheduled" && (
+                    <Button className="btn-gradient text-white flex-1" size="sm">
+                      <SendHorizontal className="w-3 h-3 mr-1.5" />
+                      Publish Now
+                    </Button>
+                  )}
+                  {selectedPost.status === "published" && (
+                    <Button variant="outline" className="flex-1" size="sm">
+                      <BarChart3 className="w-3 h-3 mr-1.5" />
+                      View Analytics
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Engagement Analytics */}
+          <Card className="glass-card border-border">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-cyan-400" />
+                Performance Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={150}>
+                <AreaChart data={engagementData}>
+                  <defs>
+                    <linearGradient id="eng2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(262, 83%, 65%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(262, 83%, 65%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Area type="monotone" dataKey="engagement" stroke="hsl(262, 83%, 65%)" fill="url(#eng2)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                <div className="text-center p-2 rounded-lg bg-secondary/30 border border-border">
+                  <p className="text-lg font-bold gradient-text">{avgEngagement.views.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted-foreground">Views</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-secondary/30 border border-border">
+                  <p className="text-lg font-bold text-green-400">{avgEngagement.likes}</p>
+                  <p className="text-[10px] text-muted-foreground">Likes</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-secondary/30 border border-border">
+                  <p className="text-lg font-bold text-cyan-400">{avgEngagement.shares}</p>
+                  <p className="text-[10px] text-muted-foreground">Shares</p>
                 </div>
               </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
