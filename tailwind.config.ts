@@ -62,6 +62,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        linkedin: {
+          blue: "#0A66C2",
+          light: "#70B5F9",
+          dark: "#004182",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

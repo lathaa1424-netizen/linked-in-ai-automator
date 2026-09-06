@@ -1,6 +1,5 @@
-// Update this page (the content is just a fallback if you fail to update the page)
-
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -10,8 +9,8 @@ const Index = () => {
         <p className="text-xl text-gray-600">
           Start building your amazing project here!
         </p>
+        <Navigate to="/dashboard" replace />
       </div>
-      <MadeWithDyad />
     </div>
   );
 };
